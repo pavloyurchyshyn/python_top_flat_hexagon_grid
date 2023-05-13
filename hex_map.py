@@ -1,7 +1,7 @@
 import pygame
 from typing import List, Dict, Tuple
 
-from math import Hexagon, HexMath
+from hex_math import Hexagon, HexMath
 
 pygame.init()
 
