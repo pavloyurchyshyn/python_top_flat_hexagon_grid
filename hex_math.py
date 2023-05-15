@@ -11,6 +11,7 @@ def get_dots(x: int, y: int, radius: int, dx: int = 0, dy: int = 0) -> Tuple[Tup
 
 class Cube:
     """Class for cube coordinates, cube vector."""
+
     def __init__(self, q: int, r: int, s: int = None):
         self.q: int = q
         self.r: int = r
@@ -24,17 +25,9 @@ class Cube:
     def qr(self) -> Tuple[int, int]:
         return self.q, self.r
 
-    def __add__(self, other: 'Cube') -> 'Cube':
-        return Cube(self.q + other.q, self.r + other.r, self.s + other.s)
-
-    def __sub__(self, other: 'Cube') -> 'Cube':
-        return Cube(self.q - other.q, self.r - other.r, self.s - other.s)
-
-    def scale(self, factor: float) -> 'Cube':
-        return Cube(int(self.q * factor), int(self.r * factor), int(self.s * factor))
-
-    def cube_neighbor(self, direction: int) -> 'Cube':
-        return self + CUBE_VECTORS[direction]
+    @property
+    def qrs_abs_sum(self):
+        return abs(self.q) + abs(self.r) + abs(self.s)
 
 
 CUBE_VECTORS: List[Cube] = [
@@ -135,11 +128,11 @@ class HexMath:
 
     @classmethod
     def cube_add(cls, h: Cube, vec: Cube) -> Cube:
-        return h + vec
+        return cls.axial_add(h, vec)
 
     @classmethod
     def cube_scale(cls, h: Cube, factor: float) -> Cube:
-        return h.scale(factor)
+        return cls.scale(h, factor)
 
     @classmethod
     def cube_neighbor(cls, cube: Cube, direction: int) -> Cube:
@@ -187,16 +180,29 @@ class HexMath:
 
     @classmethod
     def get_cube_distance(cls, a: Cube, b: Cube) -> float:
-        vec = a - b
-        return (abs(vec.q) + abs(vec.r) + abs(vec.s)) / 2
+        return cls.cube_subtract(a, b).qrs_abs_sum / 2
 
     @classmethod
-    def lerp(cls, a: Union[int, float], b: Union[int, float], t: Union[int, float]) -> int:
-        return int(a + (b - a) * t)
+    def scale(cls, h: Cube, factor: float) -> 'Cube':
+        return Cube(int(h.q * factor), int(h.r * factor), int(h.s * factor))
+
+    @classmethod
+    def cube_subtract(cls, a: Cube, b: Cube):
+        return Cube(a.q - b.q, a.r - b.r, a.s - b.s)
+
+    @classmethod
+    def axial_add(cls, a: Cube, b: Cube):
+        return Cube(a.q + b.q, a.r + b.r, a.s + b.s)
+
+    @classmethod
+    def lerp(cls, a: Union[int, float], b: Union[int, float], t: Union[int, float]) -> float:
+        return a + (b - a) * t
 
     @classmethod
     def cube_lerp(cls, a: Cube, b: Cube, t: Union[int, float]) -> Cube:
-        return Cube(cls.lerp(a.q, b.q, t), cls.lerp(a.r, b.r, t), cls.lerp(a.s, b.s, t))
+        return Cube(cls.lerp(a.q, b.q, t),
+                    cls.lerp(a.r, b.r, t),
+                    cls.lerp(a.s, b.s, t))
 
     @classmethod
     def ray_from_a_to_b(cls, a: Cube, b: Cube) -> List[Tuple[int, int]]:
